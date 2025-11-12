@@ -1,0 +1,1526 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAHBUBU ULLASH - Portfolio</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+
+    <style>
+        /* CSS Variables for Theming */
+        :root {
+            --glow-color: #3498db;
+            --bg-color: #1a1a2e;
+            --card-color: #2c3e50;
+            --glow-blue: #3498db;
+            --glow-red: #e74c3c;
+            --glow-green: #2ecc71;
+            --glow-purple: #9b59b6;
+            --glow-messenger: #0078FF;
+            --glow-telegram: #0088cc;
+            
+            /* First Code's Theming Variables */
+            --neon-color: #00ffff;
+            --magma-color: #ff4800;
+            --synthwave-color: #f0f;
+            --matrix-color: #0f0;
+            --current-color: var(--neon-color);
+        }
+
+        body[data-theme="neon"] { --current-color: var(--neon-color); }
+        body[data-theme="magma"] { --current-color: var(--magma-color); }
+        body[data-theme="synthwave"] { --current-color: var(--synthwave-color); }
+        body[data-theme="matrix"] { --current-color: var(--matrix-color); }
+        
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+        /* General Styles for the entire body */
+        body { 
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg-color);
+            color: #ecf0f1;
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Interactive Background Canvas */
+        #bg-canvas { 
+            position: fixed; 
+            inset: 0; 
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Theme Controls */
+        .theme-controls { 
+            position: fixed; 
+            top: 20px; 
+            right: 20px; 
+            z-index: 1002;
+            display: flex; 
+            gap: 10px; 
+        }
+        .theme-btn { 
+            width: 30px; 
+            height: 30px; 
+            border-radius: 50%; 
+            border: 2px solid white; 
+            cursor: pointer; 
+            transition: transform 0.2s ease; 
+        }
+        .theme-btn:hover { transform: scale(1.2); }
+
+        /* Chatbot and API button container */
+        .fixed-controls-right {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1001;
+            display: flex;
+            flex-direction: column; /* Vertically stack the buttons */
+            align-items: flex-end;
+            gap: 10px; /* Space between buttons */
+        }
+        
+        /* Chatbot Container */
+        #chatbot-container {
+            position: absolute; /* Relative to its parent .fixed-controls-right */
+            bottom: 70px; /* Position above the buttons */
+            right: 0;
+            width: 350px;
+            height: 500px;
+            background: rgba(10, 20, 35, 0.7);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            display: none;
+            flex-direction: column;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+            font-size: 0.9rem;
+            transform: scale(0.9);
+            opacity: 0;
+            transform-origin: bottom right; /* Animation origin */
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        #chatbot-container.active {
+            display: flex;
+            transform: scale(1);
+            opacity: 1;
+        }
+        
+        #chat-header {
+            padding: 10px;
+            border-bottom: 1px solid var(--current-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--current-color);
+        }
+        
+        #close-chatbot-btn {
+            background: none;
+            border: none;
+            color: var(--current-color);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        #close-chatbot-btn:hover {
+            transform: scale(1.2);
+        }
+
+        #chat-window {
+            flex-grow: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .chat-message {
+            background: var(--current-color);
+            color: var(--bg-color);
+            padding: 8px 12px;
+            border-radius: 10px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+        .chat-message.bot { align-self: flex-start; }
+        .chat-message.user { align-self: flex-end; background: #666; color: white; }
+        
+        #chat-input-form { display: flex; padding: 10px; gap: 10px; }
+        #chat-input {
+            flex-grow: 1;
+            background: transparent;
+            border: 1px solid var(--current-color);
+            color: white;
+            padding: 8px;
+            border-radius: 5px;
+            outline: none;
+        }
+        #chat-input:focus { border-color: var(--current-color); box-shadow: 0 0 5px var(--current-color); }
+        #chat-send-btn {
+            background: var(--current-color);
+            color: var(--bg-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        /* Shared Button Style for Chatbot and API Docs */
+        .floating-btn {
+            width: 60px;
+            height: 60px;
+            background: var(--current-color);
+            border-radius: 50%;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--current-color);
+            transition: transform 0.2s ease, box-shadow 0.3s ease;
+        }
+        .floating-btn:hover { transform: scale(1.1); box-shadow: 0 0 15px var(--current-color); }
+        .floating-btn i { font-size: 1.5rem; color: var(--bg-color); }
+
+        /* Specific Button IDs */
+        #toggle-chatbot-btn { z-index: 1001; }
+        #api-docs-btn-floating { 
+            background: var(--glow-blue);
+            box-shadow: 0 0 10px var(--glow-blue);
+            z-index: 1001; 
+        }
+        #api-docs-btn-floating:hover { box-shadow: 0 0 15px var(--glow-blue); }
+
+        /* Audio Player Button */
+        #play-audio-btn {
+            position: fixed; 
+            bottom: 160px; /* Position above the fixed-controls-right */
+            right: 20px; 
+            z-index: 1000;
+        }
+        /* Hamburger Menu */
+        .hamburger-menu {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 30px;
+            height: 25px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: pointer;
+            z-index: 1002; /* Higher than nav menu to be clickable */
+        }
+        .hamburger-menu span {
+            display: block;
+            height: 3px;
+            width: 100%;
+            background: #ecf0f1;
+            border-radius: 5px;
+            transition: all 0.3s ease-in-out;
+            box-shadow: 0 0 5px #ecf0f1;
+        }
+
+        /* Side Navigation */
+        .nav-menu {
+            position: fixed;
+            top: 0;
+            left: -300px;
+            width: 250px;
+            height: 100%;
+            background: rgba(44, 62, 80, 0.95);
+            padding-top: 80px;
+            transition: left 0.3s ease-in-out;
+            z-index: 1000; /* Adjusted z-index */
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
+        }
+        .nav-menu.active {
+            left: 0;
+        }
+        .nav-menu a {
+            display: block;
+            color: #ecf0f1;
+            padding: 15px 20px;
+            text-decoration: none;
+            font-size: 18px;
+            transition: background-color 0.3s, text-shadow 0.3s;
+            border-left: 5px solid transparent;
+        }
+        .nav-menu a:hover {
+            background-color: #34495e;
+            border-left-color: var(--glow-color);
+            text-shadow: 0 0 5px var(--glow-color);
+        }
+
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(26, 26, 46, 0.95);
+            z-index: 1003; /* Adjusted z-index */
+            display: none;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        #loading-overlay.visible {
+            display: flex;
+            opacity: 1;
+        }
+
+        .loader {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            transform: scale(0.8);
+        }
+        .atom {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            animation: rotate-atom 1.5s infinite linear;
+        }
+        .atom div {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: bounce 1.5s infinite ease-in-out;
+        }
+        .atom:nth-child(1) { transform: rotate(0deg); }
+        .atom:nth-child(2) { transform: rotate(40deg); }
+        .atom:nth-child(3) { transform: rotate(80deg); }
+        .atom:nth-child(4) { transform: rotate(120deg); }
+        .atom:nth-child(5) { transform: rotate(160deg); }
+        .atom:nth-child(6) { transform: rotate(200deg); }
+        .atom:nth-child(7) { transform: rotate(240deg); }
+        .atom:nth-child(8) div { background-color: #ff33cc; }
+        .atom:nth-child(9) div { background-color: #33ff99; }
+        @keyframes rotate-atom {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(10px); }
+        }
+        .nano-rings {
+            position: absolute;
+            width: 90px;
+            height: 90px;
+            border: 2px solid rgba(52, 152, 219, 0.3);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation: rotate-ring 5s infinite linear;
+        }
+        .nano-rings:nth-child(2) {
+            width: 100px;
+            height: 100px;
+            border-width: 1px;
+            animation-duration: 7s;
+            animation-direction: reverse;
+        }
+        .nano-rings:nth-child(3) {
+            width: 80px;
+            height: 80px;
+            border-width: 3px;
+            animation-duration: 6s;
+        }
+        @keyframes rotate-ring {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        /* Main Content Sections */
+        .content-container {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            text-align: center;
+            padding: 20px;
+            padding-top: 60px;
+            position: relative;
+            z-index: 10;
+            min-height: 100vh;
+            overflow-y: auto;
+        }
+        .section {
+            display: none;
+            margin-bottom: 50px;
+            padding: 20px 0;
+        }
+        .section.active-section {
+            display: block;
+        }
+
+        /* Profile Section */
+        .profile-image {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid transparent;
+            box-shadow: 0 0 20px var(--glow-color), 0 0 40px var(--glow-color);
+            transition: box-shadow 0.3s ease-in-out;
+            animation: glow 1.5s infinite alternate;
+        }
+        @keyframes glow {
+            0% { box-shadow: 0 0 10px var(--glow-color), 0 0 20px var(--glow-color); }
+            100% { box-shadow: 0 0 20px var(--glow-color), 0 0 40px var(--glow-color); }
+        }
+        .profile-name, .profile-title, .section-heading {
+            text-shadow: 0 0 10px var(--glow-color), 0 0 20px var(--glow-color);
+            animation: text-glow 1.5s infinite alternate;
+        }
+        .profile-name { margin-top: 15px; font-size: 28px; font-weight: 700; }
+        .profile-title { font-size: 14px; color: #bdc3c7; margin-top: 5px; }
+        @keyframes text-glow {
+            0% { text-shadow: 0 0 5px var(--glow-color), 0 0 10px var(--glow-color); }
+            100% { text-shadow: 0 0 10px var(--glow-color), 0 0 20px var(--glow-color); }
+        }
+        .section-heading {
+            font-size: 24px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        /* Card/Box Styling */
+        .card {
+            background-color: var(--card-color);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            border: 2px solid transparent;
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+            text-align: left;
+        }
+        .card:hover { transform: translateY(-5px); }
+
+        .card a.button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 10px auto;
+            padding: 10px 15px;
+            background-color: transparent;
+            border-radius: 50px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-size: 16px;
+        }
+        .card a.button i {
+            margin-right: 8px;
+            font-size: 18px;
+        }
+        .card a.button.glow-github {
+            border: 2px solid #fff;
+            color: #fff;
+            box-shadow: 0 0 10px #fff;
+        }
+        .card a.button.glow-facebook {
+            border: 2px solid #1877F2;
+            color: #1877F2;
+            box-shadow: 0 0 10px #1877F2;
+        }
+        .card a.button.glow-youtube {
+            border: 2px solid #FF0000;
+            color: #FF0000;
+            box-shadow: 0 0 10px #FF0000;
+        }
+        .card a.button.glow-messenger {
+            border: 2px solid var(--glow-messenger);
+            color: var(--glow-messenger);
+            box-shadow: 0 0 10px var(--glow-messenger);
+        }
+        .card a.button.glow-telegram {
+            border: 2px solid var(--glow-telegram);
+            color: var(--glow-telegram);
+            box-shadow: 0 0 10px var(--glow-telegram);
+        }
+        .card a.button.glow-blue {
+            border: 2px solid var(--glow-blue);
+            color: var(--glow-blue);
+            box-shadow: 0 0 10px var(--glow-blue);
+        }
+        .card a.button.glow-green {
+            border: 2px solid var(--glow-green);
+            color: var(--glow-green);
+            box-shadow: 0 0 10px var(--glow-green);
+        }
+
+        .card a.button:hover {
+            transform: scale(1.05);
+        }
+        
+        .bot-logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            vertical-align: middle;
+            margin-right: 10px;
+            object-fit: cover;
+        }
+        .bot-logo-video {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            vertical-align: middle;
+            margin-right: 10px;
+            object-fit: cover;
+        }
+
+        /* Glow effects for cards */
+        .card-glow-blue { border-color: var(--glow-blue); animation: glow-border-blue 1.5s infinite alternate; }
+        .card-glow-red { border-color: var(--glow-red); animation: glow-border-red 1.5s infinite alternate; }
+        .card-glow-green { border-color: var(--glow-green); animation: glow-border-green 1.5s infinite alternate; }
+        .card-glow-purple { border-color: var(--glow-purple); animation: glow-border-purple 1.5s infinite alternate; }
+        .card-glow-messenger { border-color: var(--glow-messenger); animation: glow-border-messenger 1.5s infinite alternate; }
+        .card-glow-telegram { border-color: var(--glow-telegram); animation: glow-border-telegram 1.5s infinite alternate; }
+        .card-glow-default { border-color: #95a5a6; animation: glow-border-default 1.5s infinite alternate; }
+
+
+        @keyframes glow-border-blue { 0% { box-shadow: 0 0 5px var(--glow-blue); } 100% { box-shadow: 0 0 15px var(--glow-blue); } }
+        @keyframes glow-border-red { 0% { box-shadow: 0 0 5px var(--glow-red); } 100% { box-shadow: 0 0 15px var(--glow-red); } }
+        @keyframes glow-border-green { 0% { box-shadow: 0 0 5px var(--glow-green); } 100% { box-shadow: 0 0 15px var(--glow-green); } }
+        @keyframes glow-border-purple { 0% { box-shadow: 0 0 5px var(--glow-purple); } 100% { box-shadow: 0 0 15px var(--glow-purple); } }
+        @keyframes glow-border-messenger { 0% { box-shadow: 0 0 5px var(--glow-messenger); } 100% { box-shadow: 0 0 15px var(--glow-messenger); } }
+        @keyframes glow-border-telegram { 0% { box-shadow: 0 0 5px var(--glow-telegram); } 100% { box-shadow: 0 0 15px var(--glow-telegram); } }
+        @keyframes glow-border-default { 0% { box-shadow: 0 0 5px #95a5a6; } 100% { box-shadow: 0 0 15px #95a5a6; } }
+
+        /* Other styles for skills, etc. (from previous code) */
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .skill-box {
+            background-color: var(--card-color);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            border: 2px solid transparent;
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+        }
+        .skill-box:hover { transform: scale(1.05); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), 0 0 15px var(--glow-color); }
+        .skill-list { list-style-type: none; padding: 0; margin: 10px 0 0 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+        .skill-list li { background-color: #34495e; padding: 5px 10px; border-radius: 5px; font-size: 12px; white-space: nowrap; }
+
+        /* Personal Info Section */
+        .personal-info-container {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .personal-info-image-wrapper {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            margin-bottom: 20px;
+        }
+        .personal-info-image {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid transparent;
+            box-shadow: 0 0 20px var(--glow-color), 0 0 40px var(--glow-color);
+            transition: box-shadow 0.3s ease-in-out;
+            animation: glow 1.5s infinite alternate;
+        }
+        
+        /* Adjusted atom loader to center around the image */
+        .personal-info-atom-loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 180px;
+            height: 180px;
+            pointer-events: none;
+        }
+        
+        /* New Touch Animation CSS */
+        #touch-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999;
+        }
+        .touch-circle {
+            position: absolute;
+            background-color: var(--glow-color);
+            border-radius: 50%;
+            opacity: 0.8;
+            transform: scale(0);
+            animation: touch-appear 0.3s forwards;
+            pointer-events: none;
+        }
+        @keyframes touch-appear {
+            to {
+                transform: scale(1);
+            }
+        }
+        .touch-particle {
+            position: absolute;
+            background-color: var(--glow-color);
+            border-radius: 50%;
+            opacity: 1;
+            transform: scale(1);
+            animation: touch-disperse 0.5s forwards;
+            pointer-events: none;
+        }
+        @keyframes touch-disperse {
+            to {
+                transform: translate(var(--x), var(--y)) scale(0);
+                opacity: 0;
+            }
+        }
+
+        /* Footer Style */
+        footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 14px;
+            color: #95a5a6;
+            margin-top: auto;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 480px) {
+            .skills-grid { grid-template-columns: 1fr; }
+            .profile-image { width: 120px; height: 120px; }
+            .profile-name { font-size: 24px; }
+            .profile-title { font-size: 12px; }
+            .card a.button {
+                padding: 10px;
+                font-size: 14px;
+                flex-direction: column;
+            }
+            .card a.button i { margin-right: 0; margin-bottom: 5px; }
+            
+            #chatbot-container {
+                width: 90%;
+                height: 400px;
+                bottom: 150px;
+            }
+            .fixed-controls-right {
+                bottom: 10px;
+            }
+            #play-audio-btn {
+                bottom: 130px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <audio id="background-music" src="https://github.com/cyber-ullash/cyber-ullash/raw/main/squid%20game.mp3" autoplay loop></audio>
+
+    <div id="loading-overlay">
+        <div class="loader">
+            <div class="nano-rings"></div>
+            <div class="nano-rings"></div>
+            <div class="nano-rings"></div>
+            <div class="atom"><div></div></div>
+            <div class="atom"><div></div></div>
+            <div class="atom"><div></div></div>
+            <div class="atom"><div></div></div>
+            <div class="atom"><div></div></div>
+            <div class="atom"><div></div></div>
+            <div class="atom"><div></div></div>
+            <div class="atom"><div></div></div>
+            <div class="atom"><div></div></div>
+            <div class="atom"><div></div></div>
+        </div>
+    </div>
+
+    <canvas id="bg-canvas"></canvas>
+
+    <div class="theme-controls">
+        <button class="theme-btn" data-theme="neon" style="background-color: #00ffff;" title="Neon Theme"></button>
+        <button class="theme-btn" data-theme="magma" style="background-color: #ff4800;" title="Magma Theme"></button>
+        <button class="theme-btn" data-theme="synthwave" style="background-color: #f0f;" title="Synthwave Theme"></button>
+        <button class="theme-btn" data-theme="matrix" style="background-color: #0f0;" title="Matrix Theme"></button>
+    </div>
+
+    <div class="fixed-controls-right">
+        
+        <button id="api-docs-btn-floating" class="floating-btn" title="API Documentation" onclick="window.location.href='/ullash'">
+            <i class="fas fa-file-code"></i>
+        </button>
+
+        <button id="toggle-chatbot-btn" class="floating-btn" title="AI Assistant">🤖</button>
+        
+        <div id="chatbot-container">
+            <div id="chat-header">
+                <span>AI Assistant</span>
+                <button id="close-chatbot-btn">❌</button>
+            </div>
+            <div id="chat-window"></div>
+            <form id="chat-input-form">
+                <input type="text" id="chat-input" placeholder="Type a message...">
+                <button type="submit" id="chat-send-btn">Send</button>
+            </form>
+        </div>
+    </div>
+    
+    <button id="play-audio-btn" class="floating-btn" style="width: 50px; height: 50px;" title="Play/Pause Audio">
+        <i class="fas fa-music"></i>
+    </button>
+
+    <div id="touch-container"></div>
+
+    <div class="hamburger-menu" onclick="toggleMenu()">
+        <span></span><span></span><span></span>
+    </div>
+
+    <nav class="nav-menu" id="navMenu">
+        <a href="#profile" onclick="showSection('profile')">Home</a>
+        <a href="#projects" onclick="showSection('projects')">My Projects</a>
+        <a href="#links" onclick="showSection('links')">Official Links</a>
+        <a href="/ullash">API Docs</a> 
+        <a href="#personal-info" onclick="showSection('personal-info')">Personal Info</a>
+        <a href="#device-info" onclick="showSection('device-info')">Device Information</a>
+    </nav>
+
+    <div class="content-container">
+
+        <div id="profile" class="section active-section">
+            <img src="https://i.imgur.com/qN70BAU.jpeg" alt="Mahbubu Ullash" class="profile-image">
+            <h1 class="profile-name">MAHBUBU ULLASH</h1>
+            <p class="profile-title">owner of 𝐂𝐘𝐁𝐄𝐑 ☢️_𖣘 -𝐁𝐎𝐓 ⚠️ 𝑻𝑬𝑨𝑴_ ☢️</p>
+            <div class="skills-grid">
+                <div class="skill-box card-glow-blue">
+                    <h3 class="skill-title">Programming</h3>
+                    <ul class="skill-list"><li>JavaScript</li><li>Python</li><li>HTML</li><li>CSS</li></ul>
+                </div>
+                <div class="skill-box card-glow-red">
+                    <h3 class="skill-title">Frameworks & Tools</h3>
+                    <ul class="skill-list"><li>Bot Frameworks</li><li>Git</li><li>REST APIs</li></ul>
+                </div>
+                <div class="skill-box card-glow-green">
+                    <h3 class="skill-title">Development</h3>
+                    <ul class="skill-list"><li>Web Developer</li><li>Database</li></ul>
+                </div>
+                <div class="skill-box card-glow-purple">
+                    <h3 class="skill-title">Other</h3>
+                    <ul class="skill-list"><li>Problem Solving</li><li>Teamwork</li></ul>
+                </div>
+            </div>
+        </div>
+        
+        <div id="projects" class="section">
+            <h2 class="section-heading">My Projects</h2>
+            
+            <div class="card card-glow-messenger">
+                <h3 style="text-align: center;">
+                    <video src="https://i.imgur.com/y4uqw7j.mp4" autoplay muted loop playsinline class="bot-logo-video"></video> 
+                    Messenger Chat Bot
+                </h3>
+                <p style="text-align: left; font-size: 14px; margin-top: 15px;">
+                    This Messenger chat bot is designed to serve a community by providing automated replies, moderation features, and interactive commands. It helps manage group activities efficiently and enhances user engagement.
+                </p>
+                <div style="text-align: center; margin-top: 20px;">
+                    <a href="https://github.com/cyber-ullash/CYBER-BOT-COMMUNITY.git" target="_blank" class="button glow-github">
+                        <i class="fab fa-github"></i>
+                        GitHub Repository
+                    </a>
+                    <a href="https://m.me/j/AbY9JRzH2X7k9weO/" target="_blank" class="button glow-messenger">
+                        <i class="fab fa-facebook-messenger"></i>
+                        Group Chat
+                    </a>
+                </div>
+            </div>
+
+            <div class="card card-glow-default">
+                <h3 style="text-align: center;">
+                    <img src="https://files.catbox.moe/lexled.jpg" alt="Simsimi Logo" class="bot-logo"> 
+                    Simsimi Chat
+                </h3>
+                <p style="text-align: left; font-size: 14px; margin-top: 15px;">
+                    A powerful chatbot platform that offers a messaging-like experience. The unique feature of this bot is its ability to learn and engage in conversations with emotion. Users can teach the bot new things, making it a highly interactive and personalized chat companion.
+                </p>
+                <div style="text-align: center; margin-top: 20px;">
+                    <a href="https://simsimi.cyberbot.top" target="_blank" class="button glow-blue">
+                        <i class="fas fa-robot"></i>
+                        Visit Chatbot
+                    </a>
+                </div>
+            </div>
+
+            <div class="card card-glow-telegram">
+                <h3 style="text-align: center;">
+                    <img src="https://i.imgur.com/ej83Yrv.jpeg" alt="Telegram Logo" class="bot-logo"> 
+                    Telegram Bot: @Imgur_unofficial_bot
+                </h3>
+                <p style="text-align: left; font-size: 14px; margin-top: 15px;">
+                    This Telegram bot is a powerful tool for generating links for pictures, videos, and voice messages. Just send it media files, and it will instantly create shareable links for you.
+                </p>
+                <div style="text-align: center; margin-top: 20px;">
+                    <a href="https://t.me/Imgur_unofficial_bot" target="_blank" class="button glow-telegram">
+                        <i class="fab fa-telegram-plane"></i>
+                        Start Bot
+                    </a>
+                </div>
+            </div>
+            
+            <div class="card card-glow-default">
+                <h3 style="text-align: center;">
+                    <img src="https://files.catbox.moe/6raccs.jpg" alt="SMS Bomber Logo" class="bot-logo">
+                    SMS Bomber
+                </h3>
+                <p style="text-align: left; font-size: 14px; margin-top: 15px;">
+                    এটি একটি পাওয়ারফুল টেলিগ্রাম বট, যা দিয়ে নির্দিষ্ট নাম্বারে দ্রুত একাধিক SMS পাঠানো যায়। ব্যবহার করা একদম সহজ – শুধু নাম্বার এবং SMS এর পরিমাণ লিখলেই কাজ শেষ। এটি শুধুমাত্র এন্টারটেইনমেন্ট ও এডুকেশনাল পারপাসের জন্য বানানো হয়েছে। কোনো অপব্যবহার করবেন না।
+                </p>
+                <div style="text-align: center; margin-top: 20px;">
+                    <a href="https://t.me/Bd_smsbomber_bot" target="_blank" class="button glow-telegram">
+                        <i class="fab fa-telegram-plane"></i>
+                        Start Bot
+                    </a>
+                </div>
+            </div>
+
+            <div class="card card-glow-default">
+                <h3 style="text-align: center;">
+                    <video src="https://files.catbox.moe/jews9n.mp4" autoplay muted loop playsinline class="bot-logo-video"></video> 
+                    Simple Pastebin Service
+                </h3>
+                <p style="text-align: left; font-size: 14px; margin-top: 15px;">
+                    A simple, fast, and secure pastebin service for sharing code snippets and text. Share your code, logs, or any text content with syntax highlighting and expiration options.
+                </p>
+                <div style="text-align: center; margin-top: 20px;">
+                    <a href="http://46.247.108.59:6435" target="_blank" class="button glow-green">
+                        <i class="fas fa-external-link-alt"></i>
+                        Visit Service
+                    </a>
+                </div>
+            </div>
+            
+            <h3 class="section-heading">Telegram Channels</h3>
+            <div style="display: flex; flex-direction: column; gap: 15px; align-items: center;">
+                <div class="card card-glow-telegram" style="text-align: center; padding: 10px; width: 100%;">
+                    <a href="https://t.me/Online_income_bd7187" target="_blank" class="button glow-telegram">
+                        <i class="fab fa-telegram-plane"></i>
+                        Online Income BD
+                    </a>
+                </div>
+                <div class="card card-glow-telegram" style="text-align: center; padding: 10px; width: 100%;">
+                    <a href="https://t.me/+VUQ1TyLBPZ4wZTI1" target="_blank" class="button glow-telegram">
+                        <i class="fab fa-telegram-plane"></i>
+                        Programming & Bot Support
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div id="links" class="section">
+            <h2 class="section-heading">Official Links</h2>
+            <div class="card card-glow-blue" style="text-align: center;">
+                <a href="https://github.com/cyber-ullash" target="_blank" class="button glow-github">
+                    <i class="fab fa-github"></i>
+                    GitHub
+                </a>
+            </div>
+            <div class="card card-glow-blue" style="text-align: center;">
+                <a href="https://www.facebook.com/CYBER.ULLASH" target="_blank" class="button glow-facebook">
+                    <i class="fab fa-facebook"></i>
+                    Facebook Page
+                </a>
+            </div>
+            <div class="card card-glow-red" style="text-align: center;">
+                <a href="https://youtube.com/@cyberbotcommunity?si=UDF8QSffyUglKXt-" target="_blank" class="button glow-youtube">
+                    <i class="fab fa-youtube"></i>
+                    YouTube Channel
+                </a>
+            </div>
+            <div class="card card-glow-green" style="text-align: center;">
+                <a href="https://m.me/j/AbaYeTodykMcGSTO/" target="_blank" class="button glow-messenger">
+                        <i class="fab fa-facebook-messenger"></i>
+                    Messenger Support Box
+                </a>
+            </div>
+            <div class="card card-glow-purple" style="text-align: center;">
+                <a href="https://m.me/j/AbYQ-A0Ntlobleu9/" target="_blank" class="button glow-messenger">
+                    <i class="fab fa-facebook-messenger"></i>
+                    Messenger Group Chat
+                </a>
+            </div>
+        </div>
+
+        <div id="personal-info" class="section">
+            <h2 class="section-heading">Personal Info</h2>
+            <div class="personal-info-container">
+                <div class="personal-info-image-wrapper">
+                    <img src="https://i.imgur.com/BEBpShd.jpeg" alt="Mahbubu Ullash" class="personal-info-image">
+                    <div class="personal-info-atom-loader">
+                        <div class="nano-rings"></div>
+                        <div class="nano-rings"></div>
+                        <div class="nano-rings"></div>
+                        <div class="atom"><div></div></div>
+                        <div class="atom"><div></div></div>
+                        <div class="atom"><div></div></div>
+                        <div class="atom"><div></div></div>
+                        <div class="atom"><div></div></div>
+                        <div class="atom"><div></div></div>
+                        <div class="atom"><div></div></div>
+                        <div class="atom"><div></div></div>
+                        <div class="atom"><div></div></div>
+                        <div class="atom"><div></div></div>
+                    </div>
+                </div>
+            </div>
+            <div class="card card-glow-green">
+                <p><strong>Name:</strong> Mahbub Ullash</p>
+                <p><strong>Status:</strong> Single</p>
+                <hr>
+                <p><strong>Works at:</strong> BRAC</p>
+                <p><strong>Studies at:</strong> Agriculture Training Institute, Begumgonj, noakhali</p>
+                <p><strong>Studies at:</strong> Sonapur Degree College</p>
+                <p><strong>Went to:</strong> সরকারি টেক্সটাইল ভোকেশনাল ইনস্টিটিউট নোয়াখালী</p>
+                <p><strong>Went to:</strong> Brother Andre High School, Noakhali, Bangladesh.</p>
+                <hr>
+                <p><strong>Lives in:</strong> Noakhali Sadar Upazila</p>
+                <p><strong>From:</strong> Noakhali, Chittagong, Bangladesh</p>
+                <hr>
+                <p><strong>Hobbies:</strong> My favorite hobby is script editing and bot development. Whether it’s creating new code or giving an old script a fresh touch, I enjoy both equally. I don’t just copy and paste code—I refine it with my own touch to make it more effective and lively. I’m so passionate and addicted to this work that I can spend hours immersed in it without realizing how much time has passed.</p>
+            </div>
+        </div>
+
+        <div id="device-info" class="section">
+            <h2 class="section-heading">Device Information</h2>
+            <div class="card card-glow-blue" id="device-info-card">
+                <p>Loading device information...</p>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>© 2025 CYBER ULLASH. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // Global variables for Three.js
+        window.threeSceneMaterial = null;
+        let analyzer, audioSource;
+
+        const initThreeScene = () => {
+            let scene, camera, renderer, clock, instancedMesh;
+            const mouse = new THREE.Vector2();
+            const dummy = new THREE.Object3D();
+            
+            function init() {
+                scene = new THREE.Scene();
+                camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                camera.position.set(0, 0, 50);
+                clock = new THREE.Clock();
+
+                renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('bg-canvas'), antialias: true, alpha: true });
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.setPixelRatio(window.devicePixelRatio);
+
+                createGravitationalMesh();
+                
+                window.addEventListener('resize', onWindowResize);
+                document.body.addEventListener('mousemove', onMouseMove, { passive: true });
+                
+                document.body.addEventListener('pointerdown', onPointerDown);
+
+                animate();
+            }
+
+            function createGravitationalMesh() {
+                const initialColor = getComputedStyle(document.body).getPropertyValue('--current-color').trim();
+                const geometry = new THREE.IcosahedronGeometry(0.1, 0);
+                const material = new THREE.MeshBasicMaterial({ color: initialColor });
+                window.threeSceneMaterial = material;
+
+                const particleCount = 10000;
+                instancedMesh = new THREE.InstancedMesh(geometry, material, particleCount);
+                for (let i = 0; i < particleCount; i++) {
+                    const x = (Math.random() - 0.5) * 100;
+                    const y = (Math.random() - 0.5) * 100;
+                    const z = (Math.random() - 0.5) * 100;
+                    dummy.position.set(x, y, z);
+                    dummy.updateMatrix();
+                    instancedMesh.setMatrixAt(i, dummy.matrix);
+                }
+                scene.add(instancedMesh);
+            }
+
+            function onPointerDown(event) {
+                const mouseVec = new THREE.Vector3(
+                    (event.clientX / window.innerWidth) * 2 - 1,
+                    -(event.clientY / window.innerHeight) * 2 + 1,
+                    0.5
+                );
+                mouseVec.unproject(camera);
+                const numBolts = 5 + Math.floor(Math.random() * 5);
+                for (let i = 0; i < numBolts; i++) {
+                    createLightningBolt(mouseVec);
+                }
+            }
+
+            function createLightningBolt(origin) {
+                const points = [];
+                const segmentLength = 2;
+                const totalLength = 10 + Math.random() * 10;
+                let currentPoint = origin.clone();
+                points.push(currentPoint.clone());
+
+                let direction = new THREE.Vector3((Math.random() - 0.5), (Math.random() - 0.5), (Math.random() - 0.5)).normalize();
+
+                for (let l = 0; l < totalLength; l += segmentLength) {
+                    let nextPoint = currentPoint.clone().add(direction.clone().multiplyScalar(segmentLength));
+                    nextPoint.x += (Math.random() - 0.5) * 2;
+                    nextPoint.y += (Math.random() - 0.5) * 2;
+                    nextPoint.z += (Math.random() - 0.5) * 2;
+                    points.push(nextPoint.clone());
+                    currentPoint = nextPoint;
+                }
+
+                const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                const material = new THREE.LineBasicMaterial({
+                    color: window.threeSceneMaterial.color,
+                    linewidth: 2,
+                    transparent: true,
+                    opacity: 0.9,
+                    blending: THREE.AdditiveBlending,
+                });
+
+                const line = new THREE.Line(geometry, material);
+                scene.add(line);
+
+                gsap.to(material, {
+                    opacity: 0, duration: 0.5 + Math.random() * 0.3, ease: "power2.out", delay: 0.1,
+                    onComplete: () => { scene.remove(line); geometry.dispose(); material.dispose(); }
+                });
+            }
+
+            function onWindowResize() {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+
+            function onMouseMove(event) {
+                mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+                mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            }
+
+            function animate() {
+                requestAnimationFrame(animate);
+                const elapsedTime = clock.getElapsedTime();
+
+                let freqData = null;
+                if (analyzer) {
+                    freqData = new Uint8Array(analyzer.frequencyBinCount);
+                    analyzer.getByteFrequencyData(freqData);
+                }
+
+                if (instancedMesh) {
+                    const mouse3D = new THREE.Vector3(mouse.x, mouse.y, 0.8).unproject(camera);
+                    const tempPosition = new THREE.Vector3();
+                    const directionToMouse = new THREE.Vector3();
+                    
+                    for (let i = 0; i < instancedMesh.count; i++) {
+                        instancedMesh.getMatrixAt(i, dummy.matrix);
+                        tempPosition.setFromMatrixPosition(dummy.matrix);
+
+                        // 1. Gravity Simulation
+                        const distance = tempPosition.distanceTo(mouse3D);
+                        const forceFactor = Math.max(0, 15 - distance);
+                        if (forceFactor > 0.1) {
+                            directionToMouse.subVectors(tempPosition, mouse3D).normalize();
+                            tempPosition.addScaledVector(directionToMouse, forceFactor * 0.01);
+                        }
+
+                        // 2. Audio Visualizer Effect
+                        if (freqData) {
+                            const binIndex = Math.floor(tempPosition.x * 5) + 128;
+                            const scaleFactor = (freqData[binIndex] / 255) * 0.5 + 1;
+                            tempPosition.y += Math.sin(tempPosition.x * 5 + elapsedTime * 2) * (scaleFactor - 1) * 0.5;
+                            dummy.scale.set(scaleFactor, scaleFactor, scaleFactor);
+                        }
+                        
+                        dummy.position.copy(tempPosition);
+                        dummy.updateMatrix();
+                        instancedMesh.setMatrixAt(i, dummy.matrix);
+                    }
+                    instancedMesh.instanceMatrix.needsUpdate = true;
+                    instancedMesh.rotation.y = elapsedTime * 0.05;
+                }
+
+                renderer.render(scene, camera);
+            }
+            init();
+        };
+
+        function applyTheme(theme) {
+            document.body.dataset.theme = theme;
+            const newColor = getComputedStyle(document.body).getPropertyValue('--current-color').trim();
+            if (window.threeSceneMaterial) {
+                window.threeSceneMaterial.color.set(newColor);
+            }
+        }
+
+        // ---- Audio Visualizer Setup ----
+        document.getElementById('play-audio-btn').addEventListener('click', () => {
+            const audio = document.getElementById('background-music'); // Changed to background-music
+            if (!audio.paused) {
+                audio.pause();
+                document.getElementById('play-audio-btn').innerHTML = '<i class="fas fa-play"></i>';
+                return;
+            }
+
+            if (!audioSource) {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                audioSource = audioContext.createMediaElementSource(audio);
+                analyzer = audioContext.createAnalyser();
+                audioSource.connect(analyzer);
+                analyzer.connect(audioContext.destination);
+                analyzer.fftSize = 256;
+            }
+            audio.play();
+            document.getElementById('play-audio-btn').innerHTML = '<i class="fas fa-pause"></i>';
+        });
+
+        // ---- AI Chatbot Setup ----
+        document.getElementById('toggle-chatbot-btn').style.display = 'flex'; // Changed to flex to be visible
+        const chatbotContainer = document.getElementById('chatbot-container');
+        const chatWindow = document.getElementById('chat-window');
+        const chatInput = document.getElementById('chat-input');
+        const chatForm = document.getElementById('chat-input-form');
+        const closeBtn = document.getElementById('close-chatbot-btn');
+        
+        document.getElementById('toggle-chatbot-btn').addEventListener('click', () => {
+            chatbotContainer.classList.add('active');
+        });
+        
+        closeBtn.addEventListener('click', () => {
+            chatbotContainer.classList.remove('active');
+        });
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const message = chatInput.value.trim();
+            if (message === '') return;
+
+            addMessageToChat('user', message);
+            chatInput.value = '';
+
+            const botResponse = await getAIResponse(message);
+            addMessageToChat('bot', botResponse);
+        });
+
+        function addMessageToChat(sender, text) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('chat-message', sender);
+            messageElement.textContent = text;
+            chatWindow.appendChild(messageElement);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+
+        async function getAIResponse(prompt) {
+            // Replace with your actual Gemini API Key
+            const apiKey = "AIzaSyD81X5Q9FxqC3HwfMkcRJ8vni_2pXANGoU"; 
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+            
+            const payload = {
+                contents: [{ role: "user", parts: [{ text: prompt }] }],
+            };
+
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                console.error("API Error:", response.status);
+                return "Sorry, I am unable to connect to the AI at the moment.";
+            }
+
+            const result = await response.json();
+            // Basic text extraction, error handling should be more robust
+            try {
+                return result.candidates[0].content.parts[0].text;
+            } catch (e) {
+                console.error("Failed to parse AI response:", e);
+                return "I received an unusual response and cannot reply.";
+            }
+        }
+
+        function showLoading() {
+            const loadingOverlay = document.getElementById('loading-overlay');
+            loadingOverlay.classList.add('visible');
+        }
+
+        function hideLoading() {
+            const loadingOverlay = document.getElementById('loading-overlay');
+            loadingOverlay.classList.remove('visible');
+        }
+
+        function toggleMenu() {
+            const navMenu = document.getElementById('navMenu');
+            navMenu.classList.toggle('active');
+        }
+
+        function showSection(sectionId) {
+            showLoading();
+            setTimeout(() => {
+                const sections = document.querySelectorAll('.section');
+                sections.forEach(section => {
+                    section.classList.remove('active-section');
+                });
+                document.getElementById(sectionId).classList.add('active-section');
+                hideLoading();
+            }, 500);
+        }
+        
+        document.querySelectorAll('.nav-menu a').forEach(link => {
+            link.addEventListener('click', (event) => {
+                const href = link.getAttribute('href');
+                if (href.startsWith('#')) {
+                    event.preventDefault();
+                    const sectionId = href.substring(1);
+                    showSection(sectionId);
+                    toggleMenu();
+                }
+                // API Docs link (href="/ullash") will navigate normally
+            });
+        });
+        
+        // Touch animation script
+        const touchContainer = document.getElementById('touch-container');
+        let currentTouchCircle = null;
+
+        function createParticles(x, y) {
+            const numParticles = 10;
+            for (let i = 0; i < numParticles; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'touch-particle';
+                const size = Math.random() * 5 + 3;
+                const angle = Math.random() * 2 * Math.PI;
+                const distance = Math.random() * 50 + 20;
+                const particleX = Math.cos(angle) * distance;
+                const particleY = Math.sin(angle) * distance;
+
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                particle.style.left = `${x}px`;
+                particle.style.top = `${y}px`;
+                particle.style.animationDelay = `${Math.random() * 0.1}s`;
+                particle.style.setProperty('--x', `${particleX}px`);
+                particle.style.setProperty('--y', `${particleY}px`);
+
+                touchContainer.appendChild(particle);
+                particle.addEventListener('animationend', () => {
+                    particle.remove();
+                });
+            }
+        }
+
+        touchContainer.addEventListener('mousedown', (e) => {
+            currentTouchCircle = document.createElement('div');
+            currentTouchCircle.className = 'touch-circle';
+            const size = 20;
+            currentTouchCircle.style.width = `${size}px`;
+            currentTouchCircle.style.height = `${size}px`;
+            currentTouchCircle.style.left = `${e.clientX - size / 2}px`;
+            currentTouchCircle.style.top = `${e.clientY - size / 2}px`;
+            touchContainer.appendChild(currentTouchCircle);
+        });
+
+        touchContainer.addEventListener('mouseup', (e) => {
+            if (currentTouchCircle) {
+                createParticles(e.clientX, e.clientY);
+                currentTouchCircle.remove();
+                currentTouchCircle = null;
+            }
+        });
+
+        touchContainer.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            currentTouchCircle = document.createElement('div');
+            currentTouchCircle.className = 'touch-circle';
+            const size = 20;
+            currentTouchCircle.style.width = `${size}px`;
+            currentTouchCircle.style.height = `${size}px`;
+            currentTouchCircle.style.left = `${touch.clientX - size / 2}px`;
+            currentTouchCircle.style.top = `${touch.clientY - size / 2}px`;
+            touchContainer.appendChild(currentTouchCircle);
+            e.preventDefault();
+        }, { passive: false });
+
+        touchContainer.addEventListener('touchend', (e) => {
+            if (currentTouchCircle) {
+                const touch = e.changedTouches[0];
+                createParticles(touch.clientX, touch.clientY);
+                currentTouchCircle.remove();
+                currentTouchCircle = null;
+            }
+        });
+
+        async function getDeviceInfo() {
+            const infoCard = document.getElementById('device-info-card');
+            let deviceInfoHTML = '';
+
+            try {
+                const ipResponse = await fetch('https://ipapi.co/json/');
+                const ipData = await ipResponse.json();
+                deviceInfoHTML += `<p><strong>IP Address:</strong> ${ipData.ip || 'Not available'}</p>`;
+                deviceInfoHTML += `<p><strong>Location:</strong> ${ipData.city || 'Not available'}, ${ipData.country_name || 'Not available'}</p>`;
+            } catch (error) {
+                deviceInfoHTML += `<p><strong>IP Address:</strong> Not available</p>`;
+                deviceInfoHTML += `<p><strong>Location:</strong> Not available</p>`;
+            }
+            
+            deviceInfoHTML += `<hr>`;
+
+            const userAgent = navigator.userAgent;
+            const isMobile = /Mobi|Android/i.test(userAgent);
+            
+            let deviceName = 'Not available';
+            let manufacturer = 'Not available';
+            let osVersion = 'Not available';
+            let deviceModel = 'Not available';
+            let connectionType = 'Not available';
+            
+            let displayType = 'Not Available';
+            let screenSize = 'Not Available';
+            let pixelDensity = 'Not Available';
+            let screenToBodyRatio = 'Not Available';
+            let refreshRate = 'Not Available';
+
+            if (userAgent.includes('Android')) {
+                manufacturer = 'Android';
+                const modelMatch = userAgent.match(/Android[^;]+; (.+?)(?=\sBuild)/);
+                if (modelMatch && modelMatch[1]) {
+                    deviceModel = modelMatch[1].trim();
+                } else {
+                    const modelMatch2 = userAgent.match(/\((.+?)\)/);
+                    if (modelMatch2 && modelMatch2[1]) {
+                        deviceModel = modelMatch2[1].trim();
+                    }
+                }
+                const versionMatch = userAgent.match(/Android\s+([0-9.]+)/);
+                if (versionMatch) osVersion = `Android ${versionMatch[1]}`;
+            } else if (userAgent.includes('iPhone')) {
+                deviceName = 'iPhone';
+                manufacturer = 'Apple';
+                const versionMatch = userAgent.match(/iPhone OS\s+([0-9_]+)/);
+                if (versionMatch) osVersion = `iOS ${versionMatch[1].replace(/_/g, '.')}`;
+                deviceModel = 'iPhone';
+            } else if (userAgent.includes('iPad')) {
+                deviceName = 'iPad';
+                manufacturer = 'Apple';
+                const versionMatch = userAgent.match(/CPU OS\s+([0-9_]+)/);
+                if (versionMatch) osVersion = `iOS ${versionMatch[1].replace(/_/g, '.')}`;
+                deviceModel = 'iPad';
+            } else if (userAgent.includes('Windows')) {
+                manufacturer = 'Microsoft';
+                osVersion = 'Windows';
+                deviceModel = 'Desktop PC';
+            } else if (userAgent.includes('Macintosh')) {
+                manufacturer = 'Apple';
+                osVersion = 'macOS';
+                deviceModel = 'Mac';
+            }
+            
+            if (deviceModel && deviceModel.includes('Build/')) {
+                deviceModel = deviceModel.split(';')[0];
+            }
+            if (deviceModel.includes(';')) {
+                deviceModel = deviceModel.split(';')[0];
+            }
+            if (deviceModel && deviceModel.toLowerCase().includes('mobile')) {
+                deviceModel = deviceModel.replace(/mobile/i, '').trim();
+            }
+
+            if ('connection' in navigator && navigator.connection) {
+                const connection = navigator.connection;
+                connectionType = connection.effectiveType;
+                if (connectionType) {
+                    connectionType = `Effective Type: ${connectionType.toUpperCase()}`;
+                    if (connection.downlink) {
+                        connectionType += `, Speed: ${connection.downlink} Mbps`;
+                    }
+                } else {
+                    connectionType = 'Unknown';
+                }
+            } else {
+                 connectionType = 'Not available';
+            }
+
+            // New Device Info
+            try {
+                const screenWidthInches = window.screen.width / window.devicePixelRatio / 160; 
+                const screenHeightInches = window.screen.height / window.devicePixelRatio / 160; 
+                screenSize = `${screenWidthInches.toFixed(2)} inch`;
+                
+                const diagPixels = Math.sqrt(window.screen.width**2 + window.screen.height**2);
+                const ppi = diagPixels / Math.sqrt(screenWidthInches**2 + screenHeightInches**2);
+                pixelDensity = `${Math.round(ppi)} PPI`;
+                
+                const windowArea = window.innerWidth * window.innerHeight;
+                const screenArea = window.screen.width * window.screen.height;
+                screenToBodyRatio = `${((windowArea / screenArea) * 100).toFixed(2)}%`;
+                
+                if (typeof screen.refreshRate !== 'undefined') {
+                    refreshRate = `${screen.refreshRate} Hz`;
+                } else if (window.performance && window.performance.timing && window.performance.timing.msFirstPaint) {
+                    const renderTime = performance.timing.msFirstPaint - performance.timing.navigationStart;
+                    if (renderTime > 0) {
+                        refreshRate = `${Math.round(1000 / renderTime)} Hz (Approx.)`;
+                    }
+                }
+            } catch (e) {
+                // Ignore errors if properties are not available
+            }
+            
+            if (userAgent.toLowerCase().includes('mobile') || userAgent.toLowerCase().includes('android')) {
+                displayType = 'Touchscreen';
+            } else if (userAgent.toLowerCase().includes('windows') || userAgent.toLowerCase().includes('macintosh')) {
+                displayType = 'LCD/LED Monitor';
+            }
+
+            deviceInfoHTML += `<p><strong>Device Type:</strong> ${isMobile ? 'Mobile' : 'Desktop'}</p>`;
+            deviceInfoHTML += `<p><strong>Device Name:</strong> ${deviceName}</p>`;
+            deviceInfoHTML += `<p><strong>Device Model:</strong> ${deviceModel}</p>`;
+            deviceInfoHTML += `<p><strong>Manufacturer:</strong> ${manufacturer}</p>`;
+            deviceInfoHTML += `<hr>`;
+
+            if ('getBattery' in navigator) {
+                try {
+                    const battery = await navigator.getBattery();
+                    const level = Math.round(battery.level * 100);
+                    const charging = battery.charging ? 'Yes' : 'No';
+                    deviceInfoHTML += `<p><strong>Battery Percentage:</strong> ${level}%</p>`;
+                    deviceInfoHTML += `<p><strong>Is Charging:</strong> ${charging}</p>`;
+                } catch (error) {
+                    deviceInfoHTML += `<p><strong>Battery Percentage:</strong> Not available</p>`;
+                }
+            } else {
+                deviceInfoHTML += `<p><strong>Battery Percentage:</strong> Not available</p>`;
+            }
+            
+            let ram = 'Not available (Browser limitation)';
+            if ('deviceMemory' in navigator) {
+                ram = `${navigator.deviceMemory} GB (Estimated)`;
+            }
+
+            deviceInfoHTML += `<p><strong>RAM:</strong> ${ram}</p>`;
+            deviceInfoHTML += `<p><strong>ROM:</strong> Not available (Browser limitation)</p>`;
+            deviceInfoHTML += `<hr>`;
+
+            // New Information
+            deviceInfoHTML += `<p><strong>OS Version:</strong> ${osVersion}</p>`;
+            deviceInfoHTML += `<p><strong>Screen Resolution:</strong> ${screen.width}x${screen.height}</p>`;
+            deviceInfoHTML += `<p><strong>Display Type:</strong> ${displayType}</p>`;
+            deviceInfoHTML += `<p><strong>Screen Size:</strong> ${screenSize}</p>`;
+            deviceInfoHTML += `<p><strong>Pixel Density:</strong> ${pixelDensity}</p>`;
+            deviceInfoHTML += `<p><strong>Screen to Body Ratio:</strong> ${screenToBodyRatio}</p>`;
+            deviceInfoHTML += `<p><strong>Refresh Rate:</strong> ${refreshRate}</p>`;
+            deviceInfoHTML += `<p><strong>Color Depth:</strong> ${screen.colorDepth} bit</p>`;
+            deviceInfoHTML += `<p><strong>Internet Access:</strong> ${navigator.onLine ? 'Yes' : 'No'}</p>`;
+            deviceInfoHTML += `<p><strong>Connection Type:</strong> ${connectionType}</p>`;
+            deviceInfoHTML += `<hr>`;
+
+            let browserName = 'Unknown Browser';
+            let browserVersion = 'Unknown Version';
+            const browserMatch = userAgent.match(/(Chrome|Firefox|Safari|OPR|Edge)\/([0-9.]+)/);
+            if (browserMatch) {
+                browserName = browserMatch[1].replace('OPR', 'Opera');
+                browserVersion = browserMatch[2];
+            } else {
+                const safariMatch = userAgent.match(/Version\/([0-9.]+).*Safari/);
+                if (safariMatch) {
+                    browserName = 'Safari';
+                    browserVersion = safariMatch[1];
+                }
+            }
+            deviceInfoHTML += `<p><strong>Browser Info:</strong> ${browserName} ${browserVersion}</p>`;
+            deviceInfoHTML += `<p><strong>User Agent:</strong> ${userAgent}</p>`;
+            deviceInfoHTML += `<hr>`;
+            
+            const dateLine = document.createElement('p');
+            dateLine.innerHTML = `<strong>Date & Time:</strong> <span id="live-datetime"></span>`;
+            infoCard.innerHTML = deviceInfoHTML;
+            infoCard.appendChild(dateLine);
+        }
+
+        function updateDateTime() {
+            const dateTimeSpan = document.getElementById('live-datetime');
+            if (dateTimeSpan) {
+                const now = new Date();
+                const dateString = now.toLocaleDateString();
+                const timeString = now.toLocaleTimeString();
+                dateTimeSpan.textContent = `${dateString} ${timeString}`;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            getDeviceInfo();
+            showSection('profile');
+            // Update time every second
+            setInterval(updateDateTime, 1000);
+
+            // Initialize Three.js scene and theme
+            initThreeScene();
+            document.querySelectorAll('.theme-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const theme = btn.dataset.theme;
+                    applyTheme(theme);
+                });
+            });
+            applyTheme('neon');
+        });
+
+        // অটোপ্লে ফাংশন
+        function autoPlayMusic() {
+            const music = document.getElementById('background-music');
+            music.play().catch(error => {
+                console.log('Autoplay was prevented. User interaction required.');
+            });
+        }
+        
+        // ইউজার ইন্টারেকশনের পর মিউজিক প্লে করার চেষ্টা
+        document.addEventListener('click', autoPlayMusic, { once: true });
+        document.addEventListener('touchstart', autoPlayMusic, { once: true });
+        document.addEventListener('scroll', autoPlayMusic, { once: true });
+    </script>
+</body>
+</html>
